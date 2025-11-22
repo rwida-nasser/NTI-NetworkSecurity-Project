@@ -1,0 +1,67 @@
+ip domain-name cisco.com
+crypto key generate rsa
+1024
+ip ssh version 2
+
+----------------------------------------------------------------------
+
+username Admin2 secret cisco12345
+username Admin1 secret cisco12345
+username sara20 secret cisco12345
+
+aaa new-model
+aaa authentication login default local
+aaa authentication login SSH local-case 
+
+line vty 0 15 
+transport input ssh
+login authenti SSH
+exit
+
+-------------------------------------------------------------------------------
+aaa new-model
+tacacs-server host 192.168.1.67
+tacacs-server key ciscoKey
+
+
+radius server RADIUS
+addr ipv4 192.168.1.69 auth-port 1645
+key ciscoKey
+exit
+
+aaa authentication login default group tacacs group radius enable
+
+
+--------------------------------------------------------------------------------------
+TEST_Rules  on R-0:
+---->192.168.1.16/29 has ssh access to 192.168.1.0/28 others no
+---------
+ip access-list extended TEST_Rules
+permit tcp 192.168.1.16 0.0.0.7 192.168.1.0 0.0.0.15 eq 22
+deny tcp any 192.168.1.0 0.0.0.15 eq 22
+permit ip any any
+
+#R0
+int s0/1/0
+ip access-group TEST_Rules in
+
+---------------
+ACL 130 -> PERMIT 192.168.1.0/28 to reach 192.168.1.32 ~through http/s or icmp~ others has only access through http/s
+in router R-ZPF
+otherways deny 
+-------------
+access-list 130 permit icmp 192.168.1.0 0.0.0.15 192.168.1.32 0.0.0.7
+access-list 130 permit tcp 192.168.1.0 0.0.0.15 192.168.1.32 0.0.0.7 eq 80
+access-list 130 permit tcp 192.168.1.0 0.0.0.15 192.168.1.32 0.0.0.7 eq 443
+
+access-list 130 permit tcp any 192.168.1.32 0.0.0.7 eq 80
+access-list 130 permit tcp any 192.168.1.32 0.0.0.7 eq 443
+
+access-list 130 deny ip any any
+
+
+R-ZPF#
+interface s0/1/0
+ip access-group 130 in
+
+
