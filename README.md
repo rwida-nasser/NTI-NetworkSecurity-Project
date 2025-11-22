@@ -1,4 +1,4 @@
-# NTI-NetworkSecurity-Project
+# NetworkSecurity-Project
 Designed and implemented a secure network
 
 Using subnetting, VLANs, STP, Port Security, ACLs, AAA (Local & RADIUS/TACACS+), OSPF with 
